@@ -45,6 +45,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Chocolate store is running on port:${port}`);
 });
-
-//Pw8WY3sunwPwMrSG
-//chocolate-store
