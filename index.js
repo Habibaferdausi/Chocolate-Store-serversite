@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.Port || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 //middleware
 
@@ -28,9 +28,57 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
+    const chocolateCollection = client
+      .db("ChocolateDB")
+      .collection("chocolate");
+
     app.post("/chocolate", async (req, res) => {
       const newChocolate = req.body;
       console.log(newChocolate);
+      const result = await chocolateCollection.insertOne(newChocolate);
+      res.send(result);
+    });
+
+    app.get("/chocolate", async (req, res) => {
+      const cursor = chocolateCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    app.delete("/chocolate/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await chocolateCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.get("/chocolate/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await chocolateCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.put("/chocolate/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateChocolate = req.body;
+
+      const chocolate = {
+        $set: {
+          name: updateChocolate.name,
+          country: updateChocolate.country,
+          category: updateChocolate.category,
+          photo: updateChocolate.photo,
+        },
+      };
+
+      const result = await chocolateCollection.updateOne(
+        filter,
+        chocolate,
+        options
+      );
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
@@ -40,7 +88,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
